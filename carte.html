@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>Dynasty 8 - Carte GTA V</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #111;
+      font-family: Arial, sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+      background: #153e69;
+    }
+
+    .leaflet-container {
+      background: #153e69;
+    }
+
+    .leaflet-control-zoom a {
+      background: #202020 !important;
+      color: white !important;
+      border-color: #444 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const imageUrl =
+      "https://www.gtavision.com/images/content/gtav/maps/grand-theft-auto-v_karte-satellit_hq.jpg";
+
+    const map = L.map("map", {
+      crs: L.CRS.Simple,
+      minZoom: -3,
+      maxZoom: 3,
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 100,
+      attributionControl: false
+    });
+
+    const img = new Image();
+
+    img.onload = function () {
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+
+      const bounds = [
+        [0, 0],
+        [height, width]
+      ];
+
+      L.imageOverlay(imageUrl, bounds).addTo(map);
+
+      map.fitBounds(bounds);
+
+      const initialZoom = map.getZoom();
+
+      map.setMinZoom(initialZoom - 1);
+      map.setMaxZoom(initialZoom + 5);
+
+      map.setMaxBounds(bounds);
+      map.options.maxBoundsViscosity = 0.8;
+    };
+
+    img.onerror = function () {
+      alert(
+        "Impossible de charger l'image GTA V. Vérifie son URL ou son accès."
+      );
+    };
+
+    img.src = imageUrl;
+  </script>
+</body>
+</html>
