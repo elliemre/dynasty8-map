@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynasty 8 — Administration</title>
+  <style>
+    body {
+      background: #101820;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    main {
+      width: min(90%, 400px);
+      padding: 24px;
+      border-radius: 12px;
+      background: #1e293b;
+    }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 7px;
+      border: 0;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+    #message { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <h2>🏠 Dynasty 8</h2>
+    <h3>Réinitialisation du mot de passe</h3>
+
+    <p id="message">Vérification du lien...</p>
+
+    <form id="form" hidden>
+      <input
+        id="password"
+        type="password"
+        placeholder="Nouveau mot de passe"
+        minlength="12"
+        autocomplete="new-password"
+        required
+      >
+      <button type="submit">Enregistrer le mot de passe</button>
+    </form>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <script>
+    const db = window.supabase.createClient(
+      "https://aexwedbmiecngpkolxkk.supabase.co",
+      "sb_publishable_RruHo83D0Jc7d6RMrC-dFg_uwMrNb6x"
+    );
+
+    const message = document.getElementById("message");
+    const form = document.getElementById("form");
+
+    let recoveryAllowed = false;
+
+    function showRecovery() {
+      recoveryAllowed = true;
+      message.textContent = "Choisis ton nouveau mot de passe.";
+      form.hidden = false;
+    }
+
+    db.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        showRecovery();
+      }
+    });
+
+    async function checkRecovery() {
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+
+      if (code) {
+        const result = await db.auth.exchangeCodeForSession(code);
+        if (result.error) {
+          message.textContent = result.error.message;
+          return;
+        }
+        showRecovery();
+        return;
+      }
+
+      const hash = new URLSearchParams(location.hash.slice(1));
+
+      if (hash.get("error")) {
+        message.textContent =
+          hash.get("error_description") || "Lien invalide ou expiré.";
+        return;
+      }
+
+      if (hash.get("type") === "recovery") {
+        const result = await db.auth.getSession();
+        if (result.data.session) {
+          showRecovery();
+          return;
+        }
+      }
+
+      message.textContent =
+        "Ouvre cette page depuis un nouveau lien de récupération Supabase.";
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!recoveryAllowed) return;
+
+      const password = document.getElementById("password").value;
+
+      const { error } = await db.auth.updateUser({ password });
+
+      if (error) {
+        message.textContent = "Erreur : " + error.message;
+        return;
+      }
+
+      form.hidden = true;
+      message.textContent =
+        "Mot de passe modifié avec succès ! Tu peux retourner sur ta carte.";
+      await db.auth.signOut();
+    });
+
+    checkRecovery();
+  </script>
+</body>
+</html>
