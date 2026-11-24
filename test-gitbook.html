@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynasty 8 - Test</title>
+</head>
+<body style="background:#17212b;color:white;padding:20px;font-family:Arial">
+
+  <h2>Dynasty 8 - Communication GitBook</h2>
+
+  <p id="resultat">En attente de GitBook...</p>
+
+  <button onclick="envoyer()">
+    Tester la sauvegarde
+  </button>
+
+  <script>
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) return;
+
+      document.getElementById("resultat").textContent =
+        JSON.stringify(event.data);
+    });
+
+    function envoyer() {
+      window.parent.postMessage({
+        action: {
+          action: "@editor.node.updateProps",
+          props: {
+            test: "Communication réussie !"
+          }
+        }
+      }, "*");
+    }
+
+    window.parent.postMessage({
+      action: {
+        action: "@webframe.ready"
+      }
+    }, "*");
+  </script>
+
+</body>
+</html>
